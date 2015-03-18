@@ -1,0 +1,6 @@
+<h1>This is a sample page</h1>
+<b>Hello1</b>
+<input type="text" name="user" value="sample"/>
+<input type="submit" value="click" onClick="javascript:alert('hello');"> 
+<br>This is the end of the file
+
