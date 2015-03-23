@@ -14,9 +14,14 @@ var all='';
 var allError='';
 var mTime='';
 ErrmTime='';
-
+var line = 0;
+var initLine=0;
+var errLine = 0;
+var initError=0;
  var server = http.createServer(function(request, response){
         
+console.log("New Connection..");
+
 	var path = url.parse(request.url).pathname;
 	console.log(path);
         switch(path){
@@ -40,8 +45,35 @@ default:
 });
 
         server.listen(serverPort);
+        console.log("Server Started..");
+        console.log("reading starts..");
+        var rstream = fs.createReadStream(accessFile);
 
-  	var socket=io.listen(server);  //attach socket on server
+        rstream.on('data', function (chunk) {
+  
+        line+= chunk.toString().split("\n").length;
+        })
+        .on('end', function () {  // done
+        initLine=line;
+  });
+console.log("Read ends..");
+  	
+        server.listen(serverPort);
+        console.log("Server Started..");
+        console.log("reading starts..");
+        var rstream = fs.createReadStream(errorFile);
+
+        rstream.on('data', function (chunk) {
+  
+        errLine+= chunk.toString().split("\n").length;
+        })
+        .on('end', function () {  // done
+        initError=errLine;
+  });
+console.log("Read ends..");
+
+
+var socket=io.listen(server);  //attach socket on server
 	
         fs.watchFile(accessFile,callBackAccess);
 	fs.watchFile(errorFile,callBackError);
@@ -55,34 +87,51 @@ default:
 	});
 
 
-////Commented code to tame fs.watchFile
+////Commented code to tame fs.watchFile with readStream
 
-/*function callBackAccess(cur,prev) {
+function callBackAccess(cur,prev) {
         console.log('hit..');
-	if(cur.mtime!=mTime)
-	{
-	count++;
+console.log("init line.."+initLine);
+line=0;
+ var rstream = fs.createReadStream(accessFile);
 
- 	all=all+'<br>'+cur.mtime;
+  rstream.on('data', function (chunk) {
+  
+  line+= chunk.toString().split("\n").length;
+  })
+  .on('end', function () {  // done
+
+console.log("line...:"+line);
+        all=all+'<br>'+cur.mtime;
+        count=line-initLine;
  	socket.emit('Update', {'message': all,'ErrMessage':allError,'Count':count,'Err':countErr});
-	mTime=cur.mtime;
-
-	}
+  });
+	
 	};
 
 function callBackError(cur,prev) {
+console.log("in error..");
+errLine=0;
+ var rstream = fs.createReadStream(errorFile);
 
-	if(cur.mtime!=ErrmTime)
-	{
- 	countErr++;
+        rstream.on('data', function (chunk) {
+  
+        errLine+= chunk.toString().split("\n").length;
+        })
+        .on('end', function () {  // done
+        countErr=errLine-initError;
+  });
+	
 	allError=allError+'<br>'+cur.mtime;
  	socket.emit('Update', {'message': all,'ErrMessage':allError,'Count':count,'Err':countErr});
-	ErrmTime=cur.mtime;
-	}
+	//ErrmTime=cur.mtime;
+	
 };
 
-*/
 
+
+
+/*
 function callBackAccess(cur,prev) {
         console.log('hit..');
 	
@@ -103,4 +152,4 @@ function callBackError(cur,prev) {
 	
 };
 
-
+*/
